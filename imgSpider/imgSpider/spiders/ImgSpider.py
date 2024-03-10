@@ -85,11 +85,11 @@ class imgSpider(scrapy.Spider):
         ims_project_urls = response.css('a.item-link::attr(href)').getall()
 
         if next_url:
-            yield scrapy.Request(url=next_url, callback=self.parse, cookies=self.cookies)
+            yield scrapy.Request(url=next_url, callback=self.parse, cookies=self.cookies, priority=1)
 
         for url in ims_project_urls:
             if not self.manager.check_duplicate(url.split("/")[-1].strip('.html')):
-                yield scrapy.Request(url=url, callback=self.img_parse, cookies=self.cookies)
+                yield scrapy.Request(url=url, callback=self.img_parse, cookies=self.cookies, priority=2)
 
     def img_parse(self, response):
         img = {
