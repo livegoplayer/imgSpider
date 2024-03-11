@@ -172,4 +172,7 @@ class imgSpider(scrapy.Spider):
         filename = filename.replace('？', '')
         filename = filename.replace('?', '')
 
+        # 只保留常见的英文字符
+        filename = re.sub(r'[^a-zA-Z0-9_\s.-]', '', filename)
+
         return filename
