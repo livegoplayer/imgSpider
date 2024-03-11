@@ -121,6 +121,8 @@ class imgSpider(scrapy.Spider):
                     print("name=" + img['img_project_name'] + str(img['img_project_id']) + ".lnk")
                     print("=" * 115 + "\n")
 
+                    self.log_exception(e, img)
+
             for item in img['img_item_list']:
                 img_url = item.css('div.post-item::attr(data-src)').get()
                 title, img_index = item.css('div.post-item')[0].css('div.post-item::attr(data-caption)').re(
@@ -176,3 +178,49 @@ class imgSpider(scrapy.Spider):
         filename = re.sub(r'[^a-zA-Z0-9_\s.-]', '', filename)
 
         return filename
+
+
+    def add_id_to_file(self, id):
+        file_path = r"H:\download\hentaiclub\ids_left.txt"
+
+        try:
+            with open(file_path, 'r') as file:
+                ids = file.read().split(',')
+                ids = [int(i) for i in ids if i.strip()]
+        except FileNotFoundError:
+            ids = []
+
+        ids.append(id)
+
+        with open(file_path, 'w') as file:
+            file.write(','.join(map(str, ids)))
+
+
+
+    def read_ids_from_file(self):
+        ids_path = r"H:\download\hentaiclub\ids_left.txt"
+        try:
+            with open(ids_path, 'r') as file:
+                ids = file.read().split(',')
+                ids = [int(i) for i in ids if i.strip()]
+        except FileNotFoundError:
+            ids = []
+        return ids
+
+    def write_ids_to_file(self, ids):
+        ids_path = r"H:\download\hentaiclub\ids_left.txt"
+        with open(ids_path, 'w') as file:
+            file.write(','.join(map(str, ids)))
+
+    def log_exception(self, e, img):
+        log_path = r"H:\download\hentaiclub\log.txt"
+        ids = self.read_ids_from_file()
+        with open(log_path, 'a') as log_file:
+            log_file.write("\n" + "=" * 50 + " Exception Occurred " + "=" * 50 + "\n")
+            log_file.write("Exception: {}\n".format(e))
+            log_file.write("img_project_name: {}\n".format(img['img_project_name']))
+            log_file.write("img_project_id: {}\n".format(img['img_project_id']))
+            log_file.write("=" * 115 + "\n")
+        ids.append(img['img_project_id'])
+        self.write_ids_to_file(ids)
+
