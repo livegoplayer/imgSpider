@@ -7,8 +7,47 @@ from scrapy import signals
 
 # useful for handling different item types with a single interface
 from itemadapter import is_item, ItemAdapter
+from time import sleep
+from scrapy.exceptions import IgnoreRequest
 
+from time import sleep
+from scrapy.exceptions import IgnoreRequest
 
+from time import sleep
+from scrapy.exceptions import IgnoreRequest
+
+class PauseOnRetryMiddleware:
+    def __init__(self, crawler):
+        self.crawler = crawler
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        return cls(crawler)
+
+    def process_response(self, request, response, spider):
+        # 在每次成功的响应后重置重试次数
+        if 'retry_times' in request.meta:
+            del request.meta['retry_times']
+        return response
+
+    def process_exception(self, request, exception, spider):
+        # 检查异常类型是否为IgnoreRequest，避免重复处理
+        if isinstance(exception, IgnoreRequest):
+            return None
+
+        # 检查重试次数是否达到上限，如果是，则暂停爬取
+        max_retry_times = self.crawler.settings.get('RETRY_TIMES', 2)
+        retry_times = request.meta.get('retry_times', 0)
+        if retry_times >= max_retry_times:
+            self.crawler.engine.pause()  # 暂停爬取
+            print("爬取暂停中...")
+            sleep(300)  # 等待5分钟
+            print("\n" * 10)  # 输出一定数量的空白行
+            print("恢复爬取...")
+            self.crawler.engine.unpause()  # 恢复爬取
+            raise IgnoreRequest  # 抛出IgnoreRequest以防止引擎继续处理请求
+
+        return None
 class ImgspiderSpiderMiddleware:
     # Not all methods need to be defined. If a method is not defined,
     # scrapy acts as if the spider middleware does not modify the
