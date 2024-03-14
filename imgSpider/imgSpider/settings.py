@@ -72,9 +72,8 @@ COOKIES = {
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
-    'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware': 542,  # 设置为比RetryMiddleware优先级低的值
-    'scrapy.downloadermiddlewares.retry.RetryMiddleware': 543,  # 设置为比PauseOnRetryMiddleware优先级低的值
-    'imgSpider.middlewares.PauseOnRetryMiddleware': 544,  # 设置为比HttpProxyMiddleware优先级高的值
+    'imgSpider.middlewares.CustomRetryPauseMiddleware': 544,  # 设置为比HttpProxyMiddleware优先级高的值
+    'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware': 555,  # 设置为比RetryMiddleware优先级低的值
     # 其他中间件...
 }
 HTTP_PROXY = 'http://127.0.0.1:8980'

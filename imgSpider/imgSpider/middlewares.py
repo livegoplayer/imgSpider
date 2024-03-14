@@ -16,38 +16,47 @@ from scrapy.exceptions import IgnoreRequest
 from time import sleep
 from scrapy.exceptions import IgnoreRequest
 
-class PauseOnRetryMiddleware:
-    def __init__(self, crawler):
+from time import sleep
+from scrapy.exceptions import IgnoreRequest
+
+from time import sleep
+from scrapy.exceptions import IgnoreRequest
+
+from time import sleep
+from scrapy.downloadermiddlewares.retry import RetryMiddleware
+from scrapy.exceptions import IgnoreRequest
+
+class CustomRetryPauseMiddleware(RetryMiddleware):
+    def __init__(self, settings, crawler):
+        super().__init__(settings)
         self.crawler = crawler
 
     @classmethod
     def from_crawler(cls, crawler):
-        return cls(crawler)
-
-    def process_response(self, request, response, spider):
-        # 在每次成功的响应后重置重试次数
-        if 'retry_times' in request.meta:
-            del request.meta['retry_times']
-        return response
+        return cls(crawler.settings, crawler)
 
     def process_exception(self, request, exception, spider):
-        # 检查异常类型是否为IgnoreRequest，避免重复处理
-        if isinstance(exception, IgnoreRequest):
+        response = super().process_exception(request, exception, spider)
+
+        if response is None:
             return None
 
-        # 检查重试次数是否达到上限，如果是，则暂停爬取
-        max_retry_times = self.crawler.settings.get('RETRY_TIMES', 2)
         retry_times = request.meta.get('retry_times', 0)
+        max_retry_times = self.max_retry_times
+
         if retry_times >= max_retry_times:
             self.crawler.engine.pause()  # 暂停爬取
             print("爬取暂停中...")
-            sleep(300)  # 等待5分钟
+            sleep(600)  # 等待5分钟
             print("\n" * 10)  # 输出一定数量的空白行
             print("恢复爬取...")
             self.crawler.engine.unpause()  # 恢复爬取
+
+            # 重新将失败的请求添加到调度器中
+            self.crawler.engine.crawl(request, spider)
             raise IgnoreRequest  # 抛出IgnoreRequest以防止引擎继续处理请求
 
-        return None
+        return response
 class ImgspiderSpiderMiddleware:
     # Not all methods need to be defined. If a method is not defined,
     # scrapy acts as if the spider middleware does not modify the
